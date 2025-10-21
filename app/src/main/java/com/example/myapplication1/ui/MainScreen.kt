@@ -18,6 +18,7 @@ import com.example.myapplication1.ui.tabs.Authors
 import com.example.myapplication1.ui.tabs.RegForm
 import com.example.myapplication1.ui.tabs.Rules
 import com.example.myapplication1.ui.tabs.Settings
+import com.example.myapplication1.ui.tabs.Game
 
 @Composable
 fun MainScreen() {
@@ -31,32 +32,38 @@ fun MainScreen() {
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ) {
             Tab(
-                text = { Text("Регистрация") },
+                text = { Text("Игра") },
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 }
             )
             Tab(
-                text = { Text("Правила") },
+                text = { Text("Регистрация") },
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 }
             )
             Tab(
-                text = { Text("Авторы") },
+                text = { Text("Правила") },
                 selected = selectedTab == 2,
                 onClick = { selectedTab = 2 }
             )
             Tab(
-                text = { Text("Настройки") },
+                text = { Text("Авторы") },
                 selected = selectedTab == 3,
                 onClick = { selectedTab = 3 }
+            )
+            Tab(
+                text = { Text("Настройки") },
+                selected = selectedTab == 4,
+                onClick = { selectedTab = 4 }
             )
         }
 
         when (selectedTab) {
-            0 -> RegForm()
-            1 -> Rules()
-            2 -> Authors()
-            3 -> Settings()
+            0 -> Game()
+            1 -> RegForm()
+            2 -> Rules()
+            3 -> Authors()
+            4 -> Settings()
         }
     }
 }
