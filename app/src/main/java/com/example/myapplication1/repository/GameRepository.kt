@@ -16,20 +16,12 @@ class GameRepository private constructor(private val database: AppDatabase) {
         playerDao.getAllPlayers()
     }
 
-    suspend fun getPlayerById(playerId: Long): Player? = withContext(Dispatchers.IO) {
-        playerDao.getPlayerById(playerId)
-    }
-
     suspend fun insertPlayer(player: Player): Long = withContext(Dispatchers.IO) {
         playerDao.insertPlayer(player)
     }
 
-    suspend fun getTopScores(limit: Int): List<HighScore> = withContext(Dispatchers.IO) {
-        highScoreDao.getTopScores(limit)
-    }
-
-    suspend fun getTopScoreByPlayer(playerId: Long): HighScore? = withContext(Dispatchers.IO) {
-        highScoreDao.getTopScoreByPlayer(playerId)
+    suspend fun getTopScoresPerPlayer(): List<HighScore> = withContext(Dispatchers.IO) {
+        highScoreDao.getTopScoresPerPlayer()
     }
 
     suspend fun insertScore(score: HighScore) = withContext(Dispatchers.IO) {

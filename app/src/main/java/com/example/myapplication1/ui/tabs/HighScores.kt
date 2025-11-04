@@ -10,7 +10,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -45,7 +44,7 @@ fun HighScores() {
 
     LaunchedEffect(Unit) {
         loading = true
-        topScores = withContext(Dispatchers.IO) { repository.getTopScores(50) } // Получаем топ 50
+        topScores = withContext(Dispatchers.IO) { repository.getTopScoresPerPlayer() }
         val allPlayers = withContext(Dispatchers.IO) { repository.getAllPlayers() }
         playersMap = allPlayers.associateBy { it.playerId }
         loading = false

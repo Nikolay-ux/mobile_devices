@@ -1,5 +1,6 @@
 package com.example.myapplication1.ui.tabs
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -28,12 +28,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.myapplication1.R
 import com.example.myapplication1.model.GameData
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import kotlin.random.Random
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.ui.input.pointer.pointerInput
@@ -54,6 +52,7 @@ data class Bug(
     val imageRes: Int
 )
 
+@SuppressLint("ConfigurationScreenWidthHeight", "DefaultLocale")
 @Composable
 fun Game() {
     Log.d("GameTab", "GameTab recomposed")
@@ -68,7 +67,7 @@ fun Game() {
     val topPaddingDp = 0.dp
     val topPaddingPx = with(density) { topPaddingDp.toPx() }
 
-    val bottomPaddingDp = 200.dp
+    val bottomPaddingDp = 270.dp
     val bottomPaddingPx = with(density) { bottomPaddingDp.toPx() }
     val screenHeightPx = with(density) { (screenHeightDp).dp.toPx() }
 
@@ -93,8 +92,6 @@ fun Game() {
         val speedFactor = (GameData.speed / 5.0f).coerceAtLeast(0.5f)
         val maxSpeed = 5f * speedFactor
 
-        val x = Random.nextFloat() * (screenWidthPx - sizePx)
-        val y = topPaddingPx + Random.nextFloat() * (gameAreaHeightPx - sizePx)
         return Bug(
             id = Random.nextInt(),
             initialX = Random.nextFloat() * (screenWidthPx - sizePx),
@@ -124,6 +121,7 @@ fun Game() {
     }
 
     LaunchedEffect(gameActive) {
+        val targetTime = 1000L / 16
         while (gameActive) {
             bugs.forEach { bug ->
                 val currentX = bugPositions[bug.id]?.first ?: bug.initialX
@@ -151,7 +149,7 @@ fun Game() {
 
                 bugPositions[bug.id] = Pair(newX, newY)
             }
-            delay(16)
+            delay(targetTime)
         }
     }
 
@@ -226,7 +224,7 @@ fun Game() {
         }
 
         LinearProgressIndicator(
-            progress = timeProgress,
+            progress = { timeProgress },
             modifier = Modifier.fillMaxWidth(),
             color = ProgressIndicatorDefaults.linearColor,
             trackColor = ProgressIndicatorDefaults.linearTrackColor,
@@ -253,7 +251,8 @@ fun Game() {
                                     val hitBoxPaddingPx = with(density) { hitBoxPadding.toPx() }
 
                                     if (tapX >= bugX - hitBoxPaddingPx && tapX <= bugX + sizePx + hitBoxPaddingPx &&
-                                        tapY >= bugY - hitBoxPaddingPx && tapY <= bugY + sizePx + hitBoxPaddingPx) {
+                                        tapY >= bugY - hitBoxPaddingPx && tapY <= bugY + sizePx + hitBoxPaddingPx
+                                    ) {
                                         bugs.removeAt(i)
                                         bugPositions.remove(bug.id)
                                         score += 10
@@ -277,9 +276,13 @@ fun Game() {
                 val imageModifier = remember(currentX, currentY, bug.dx, bug.dy) {
                     Modifier
                         .size(bug.size.dp)
-                        .offset { IntOffset(currentX.roundToInt(), currentY.roundToInt()) }
                         .graphicsLayer(
-                            rotationZ = (kotlin.math.atan2(bug.dy, bug.dx) * 180 / kotlin.math.PI).toFloat()
+                            translationX = currentX,
+                            translationY = currentY,
+                            rotationZ = (kotlin.math.atan2(
+                                bug.dy,
+                                bug.dx
+                            ) * 180 / kotlin.math.PI).toFloat()
                         )
                 }
 

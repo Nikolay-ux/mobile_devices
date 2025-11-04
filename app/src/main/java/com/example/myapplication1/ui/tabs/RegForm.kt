@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -160,11 +161,16 @@ fun RegForm() {
             birthday = birthday,
             zodiac = zodiac
         )
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
             val id = repository.insertPlayer(newPlayer)
             GameData.currentPlayerId = id
             GameData.currentPlayerName = newPlayer.name
             GameData.currentPlayerDifficulty = newPlayer.difficult
+
+            val updatedPlayers = repository.getAllPlayers()
+            withContext(Dispatchers.Main) {
+                players = updatedPlayers
+            }
         }
 
     }
@@ -180,14 +186,16 @@ fun RegForm() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (loading) {
                 Text("Загрузка игроков...")
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
+                        .heightIn(max = 200.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(players) { player ->
@@ -214,8 +222,7 @@ fun RegForm() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(30.dp)
-                    .verticalScroll(scrollState),
+                    .padding(30.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
@@ -315,12 +322,12 @@ fun RegForm() {
                 }
 
                 Text(
-                    text = "Выбрана дата: ${birthday}",
+                    text = "Выбрана дата: $birthday",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Знак зодиака: ${zodiac}",
+                    text = "Знак зодиака: $zodiac",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -350,7 +357,7 @@ fun RegForm() {
                         )
                         Image(
                             painter = painterResource(id = zodiacImageRes),
-                            contentDescription = "Знак зодиака: ${zodiac}",
+                            contentDescription = "Знак зодиака: $zodiac",
                             modifier = Modifier
                                 .size(120.dp)
                                 .padding(8.dp)
@@ -361,8 +368,10 @@ fun RegForm() {
 
                 Button(
                     onClick = {
-                        course = courses.indexOf(courses[0]) + 1
-                        showResults = true
+                        if (isFormValid) {
+                            savePlayer()
+                            showResults = true
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -412,23 +421,23 @@ fun StudentResults(zodiacImageRes: Int) {
                 fontWeight = FontWeight.Bold
             )
 
-            Text("ФИО: ${name}", modifier = Modifier.align(Alignment.Start))
-            Text("Пол: ${sex}", modifier = Modifier.align(Alignment.Start))
-            Text("Курс: ${course}", modifier = Modifier.align(Alignment.Start))
-            Text("Уровень сложности: ${difficult}/10", modifier = Modifier.align(Alignment.Start))
-            Text("Дата рождения: ${birthday}", modifier = Modifier.align(Alignment.Start))
+            Text("ФИО: $name", modifier = Modifier.align(Alignment.Start))
+            Text("Пол: $sex", modifier = Modifier.align(Alignment.Start))
+            Text("Курс: $course", modifier = Modifier.align(Alignment.Start))
+            Text("Уровень сложности: $difficult/10", modifier = Modifier.align(Alignment.Start))
+            Text("Дата рождения: $birthday", modifier = Modifier.align(Alignment.Start))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("♈ Знак зодиака: ${zodiac}",
+                Text("♈ Знак зодиака: $zodiac",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold)
 
                 Image(
                     painter = painterResource(id = zodiacImageRes),
-                    contentDescription = "Знак зодиака: ${zodiac}",
+                    contentDescription = "Знак зодиака: $zodiac",
                     modifier = Modifier
                         .fillMaxWidth()
                         .size(80.dp)
