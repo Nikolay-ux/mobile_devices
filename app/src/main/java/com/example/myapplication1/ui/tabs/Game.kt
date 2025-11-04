@@ -67,9 +67,8 @@ fun Game() {
     val topPaddingDp = 0.dp
     val topPaddingPx = with(density) { topPaddingDp.toPx() }
 
-    val bottomPaddingDp = 270.dp
+    val bottomPaddingDp = 230.dp
     val bottomPaddingPx = with(density) { bottomPaddingDp.toPx() }
-    val screenHeightPx = with(density) { (screenHeightDp).dp.toPx() }
 
     val gameAreaHeightPx = with(density) { screenHeightDp.dp.toPx() } - topPaddingPx - bottomPaddingPx
 
@@ -92,10 +91,13 @@ fun Game() {
         val speedFactor = (GameData.speed / 5.0f).coerceAtLeast(0.5f)
         val maxSpeed = 5f * speedFactor
 
+        val x = Random.nextFloat() * (screenWidthPx - sizePx)
+        val y = topPaddingPx + Random.nextFloat() * (gameAreaHeightPx - sizePx)
+
         return Bug(
             id = Random.nextInt(),
-            initialX = Random.nextFloat() * (screenWidthPx - sizePx),
-            initialY = Random.nextFloat() * (screenHeightPx - sizePx),
+            initialX = x,
+            initialY = y,
             dx = (Random.nextFloat() * 2 * maxSpeed - maxSpeed),
             dy = (Random.nextFloat() * 2 * maxSpeed - maxSpeed),
             size = sizeDp,
