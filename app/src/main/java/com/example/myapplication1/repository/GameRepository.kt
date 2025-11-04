@@ -7,7 +7,7 @@ import com.example.myapplication1.model.HighScore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class GameRepository private constructor(private val database: AppDatabase) {
+class GameRepository private constructor(database: AppDatabase) {
 
     private val playerDao = database.playerDao()
     private val highScoreDao = database.highScoreDao()

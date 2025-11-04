@@ -63,7 +63,7 @@ private fun loadHtmlFromResources(context: Context): String {
     return try {
         val inputStream: InputStream = context.resources.openRawResource(R.raw.rules)
         inputStream.bufferedReader().use { it.readText() }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         """
         <h1>Правила игры</h1>
         <p>Файл с правилами не найден.</p>
