@@ -37,6 +37,12 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication1.model.HighScore
+import com.example.myapplication1.repository.GameRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 data class Bug(
     val id: Int,
@@ -51,6 +57,8 @@ data class Bug(
 @Composable
 fun Game() {
     Log.d("GameTab", "GameTab recomposed")
+    val context = LocalContext.current
+    val repository = remember { GameRepository.getInstance(context) }
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
@@ -80,7 +88,7 @@ fun Game() {
     )
 
     fun createBug(): Bug {
-        val sizeDp = 30 + Random.nextInt(20) // 30-50 dp
+        val sizeDp = 30 + Random.nextInt(20)
         val sizePx = with(density) { sizeDp.dp.toPx() }
         val speedFactor = (GameData.speed / 5.0f).coerceAtLeast(0.5f)
         val maxSpeed = 5f * speedFactor
@@ -163,6 +171,26 @@ fun Game() {
             if (!gameActive && bugs.isNotEmpty()) {
                 bugs.clear()
                 bugPositions.clear()
+
+                if (GameData.currentPlayerId != -1L && score > 0) {
+                    val newScore = HighScore(
+                        playerId = GameData.currentPlayerId,
+                        score = score
+                    )
+                    CoroutineScope(Dispatchers.IO).launch {
+                        repository.insertScore(newScore)
+                    }
+                }
+            }
+            delay(500)
+        }
+    }
+
+    LaunchedEffect(gameActive) {
+        while (true) {
+            if (!gameActive && bugs.isNotEmpty()) {
+                bugs.clear()
+                bugPositions.clear()
             }
             delay(500)
         }
@@ -174,6 +202,19 @@ fun Game() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        if (GameData.currentPlayerId != -1L) {
+            Text(
+                text = "Игрок: ${GameData.currentPlayerName}",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            Text(
+                text = "Игрок не выбран",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

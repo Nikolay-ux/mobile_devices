@@ -22,6 +22,8 @@ import com.example.myapplication1.ui.tabs.RegForm
 import com.example.myapplication1.ui.tabs.Rules
 import com.example.myapplication1.ui.tabs.Settings
 import com.example.myapplication1.ui.tabs.Game
+import com.example.myapplication1.ui.tabs.Players
+import com.example.myapplication1.ui.tabs.HighScores
 
 @Composable
 fun MainScreen() {
@@ -40,34 +42,46 @@ fun MainScreen() {
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 }
             )
+//            Tab(
+//                text = { Text("Игроки") },
+//                selected = selectedTab == 1,
+//                onClick = { selectedTab = 1 }
+//            )
             Tab(
-                text = { Text("Регистрация") },
+                text = { Text("Рекорды") },
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 }
             )
             Tab(
-                text = { Text("Правила") },
+                text = { Text("Регистрация") },
                 selected = selectedTab == 2,
                 onClick = { selectedTab = 2 }
             )
             Tab(
-                text = { Text("Авторы") },
+                text = { Text("Правила") },
                 selected = selectedTab == 3,
                 onClick = { selectedTab = 3 }
             )
             Tab(
-                text = { Text("Настройки") },
+                text = { Text("Авторы") },
                 selected = selectedTab == 4,
                 onClick = { selectedTab = 4 }
+            )
+            Tab(
+                text = { Text("Настройки") },
+                selected = selectedTab == 5,
+                onClick = { selectedTab = 5 }
             )
         }
 
         when (selectedTab) {
             0 -> Game()
-            1 -> RegForm()
-            2 -> Rules()
-            3 -> Authors()
-            4 -> Settings()
+//            1 -> Players()
+            1 -> HighScores()
+            2 -> RegForm()
+            3 -> Rules()
+            4 -> Authors()
+            5 -> Settings()
         }
     }
 }
