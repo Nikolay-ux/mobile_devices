@@ -1,6 +1,12 @@
 package com.example.myapplication1.ui.tabs
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.media.MediaPlayer
 import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
@@ -34,8 +40,13 @@ import com.example.myapplication1.model.GameData
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication1.model.Bonus
 import com.example.myapplication1.model.HighScore
 import com.example.myapplication1.repository.GameRepository
 import kotlinx.coroutines.CoroutineScope
@@ -64,6 +75,7 @@ fun Game() {
     val screenHeightDp = configuration.screenHeightDp
 
     val screenWidthPx = with(density) { (screenWidthDp - 50).dp.toPx() }
+    val screenHeightPx = with(density) { (screenHeightDp - 50).dp.toPx() }
     val topPaddingDp = 0.dp
     val topPaddingPx = with(density) { topPaddingDp.toPx() }
 
@@ -107,6 +119,77 @@ fun Game() {
 
     val bugPositions = remember { mutableMapOf<Int, Pair<Float, Float>>() }
 
+    var sensorManager by remember { mutableStateOf<SensorManager?>(null) }
+    var accelerometer by remember { mutableStateOf<Sensor?>(null) }
+    var accelerationX by remember { mutableFloatStateOf(0f) }
+    var accelerationY by remember { mutableFloatStateOf(0f) }
+    var bonusActive by remember { mutableStateOf(false) }
+    var bonusX by remember { mutableFloatStateOf(0f) }
+    var bonusY by remember { mutableFloatStateOf(0f) }
+    var bonusTimeLeft by remember { mutableFloatStateOf(0f) }
+    var bonusDuration by remember { mutableFloatStateOf(Bonus.duration) }
+
+    var tiltEffectActive by remember { mutableStateOf(false) }
+    var tiltEffectTimeLeft by remember { mutableFloatStateOf(0f) }
+    val tiltEffectDuration = 5f
+
+    val mediaPlayer = remember { MediaPlayer.create(context, R.raw.bug_scream) }
+
+    LaunchedEffect(tiltEffectTimeLeft, tiltEffectActive) {
+        if (tiltEffectActive && tiltEffectTimeLeft > 0f) {
+            while (tiltEffectTimeLeft > 0f) {
+                delay(100)
+                tiltEffectTimeLeft -= 0.1f
+            }
+            tiltEffectActive = false
+        }
+    }
+
+    val sensorListener = remember {
+        object : SensorEventListener {
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+            }
+
+            override fun onSensorChanged(event: SensorEvent?) {
+                event?.let {
+                    if (it.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+                        accelerationX = it.values[0]
+                        accelerationY = it.values[1]
+                    }
+                }
+            }
+        }
+    }
+
+    DisposableEffect(context) {
+        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        accelerometer?.let { accSensor ->
+            sensorManager?.registerListener(sensorListener, accSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+
+        onDispose {
+            sensorManager?.unregisterListener(sensorListener)
+        }
+    }
+
+    LaunchedEffect(gameActive) {
+        while (gameActive) {
+            delay(15000L)
+            if (gameActive) {
+                bonusX = Random.nextFloat() * (screenWidthPx - with(density) { 40.dp.toPx() })
+                bonusY = Random.nextFloat() * (screenHeightPx - with(density) { 40.dp.toPx() })
+                bonusTimeLeft = bonusDuration
+                bonusActive = true
+                Bonus.x = bonusX
+                Bonus.y = bonusY
+                Bonus.timeLeft = bonusTimeLeft
+                Bonus.isActive = true
+            }
+        }
+    }
+
     LaunchedEffect(gameActive) {
         if (gameActive) {
             val startTime = System.currentTimeMillis()
@@ -125,6 +208,10 @@ fun Game() {
     LaunchedEffect(gameActive) {
         val targetTime = 1000L / 16
         while (gameActive) {
+            val currentBonusActive = bonusActive
+            val currentTiltEffectActive = tiltEffectActive
+            val currentAccelerationX = accelerationX
+            val currentAccelerationY = accelerationY
             bugs.forEach { bug ->
                 val currentX = bugPositions[bug.id]?.first ?: bug.initialX
                 val currentY = bugPositions[bug.id]?.second ?: bug.initialY
@@ -133,20 +220,46 @@ fun Game() {
                 var newX = currentX + bug.dx
                 var newY = currentY + bug.dy
 
-                if (newX < 0) {
-                    newX = 0f
-                    bug.dx = -bug.dx
-                } else if (newX + sizePx > screenWidthPx) {
-                    newX = screenWidthPx - sizePx
-                    bug.dx = -bug.dx
-                }
+                if (currentBonusActive || currentTiltEffectActive) {
+                    if (currentBonusActive) {
+                        val centerX = bonusX + with(density) { 20.dp.toPx() }
+                        val centerY = bonusY + with(density) { 20.dp.toPx() }
+                        val dxToCenter = centerX - newX
+                        val dyToCenter = centerY - newY
+                        val distanceToCenter = kotlin.math.sqrt((dxToCenter * dxToCenter + dyToCenter * dyToCenter).toDouble()).toFloat()
+                        if (distanceToCenter > 0) {
+                            val attractionStrength = 1f
+                            newX += (dxToCenter / distanceToCenter) * attractionStrength
+                            newY += (dyToCenter / distanceToCenter) * attractionStrength
+                        }
+                    }
+                    if (currentTiltEffectActive) {
+                        val tiltFactor = 0.4f
 
-                if (newY < topPaddingPx) {
-                    newY = topPaddingPx
-                    bug.dy = -bug.dy
-                } else if (newY + sizePx > topPaddingPx + gameAreaHeightPx) {
-                    newY = topPaddingPx + gameAreaHeightPx - sizePx
-                    bug.dy = -bug.dy
+                        bug.dx -= currentAccelerationX * tiltFactor
+                        bug.dy += currentAccelerationY * tiltFactor
+
+                    }
+                    newX = newX.coerceIn(0f, screenWidthPx - sizePx)
+                    newY = newY.coerceIn(topPaddingPx, topPaddingPx + gameAreaHeightPx - sizePx)
+
+                }
+                else {
+                    if (newX < 0) {
+                        newX = 0f
+                        bug.dx = -bug.dx
+                    } else if (newX + sizePx > screenWidthPx) {
+                        newX = screenWidthPx - sizePx
+                        bug.dx = -bug.dx
+                    }
+
+                    if (newY < topPaddingPx) {
+                        newY = topPaddingPx
+                        bug.dy = -bug.dy
+                    } else if (newY + sizePx > topPaddingPx + gameAreaHeightPx) {
+                        newY = topPaddingPx + gameAreaHeightPx - sizePx
+                        bug.dy = -bug.dy
+                    }
                 }
 
                 bugPositions[bug.id] = Pair(newX, newY)
@@ -240,11 +353,27 @@ fun Game() {
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { offset ->
-                            if (gameActive) {
+                            if (gameActive && GameData.currentPlayerId != -1L) {
                                 val tapX = offset.x
                                 val tapY = offset.y
                                 var hit = false
 
+                                if (bonusActive) {
+                                    val bonusSize = 40.dp.toPx()
+                                    if (tapX >= bonusX && tapX <= bonusX + bonusSize &&
+                                        tapY >= bonusY && tapY <= bonusY + bonusSize
+                                    ) {
+                                        bonusActive = false
+                                        Bonus.isActive = false
+                                        score += 20
+
+                                        tiltEffectTimeLeft = tiltEffectDuration
+                                        tiltEffectActive = true
+
+                                        mediaPlayer?.start()
+                                        hit = true
+                                    }
+                                }
                                 for (i in bugs.size - 1 downTo 0) {
                                     val bug = bugs[i]
                                     val (bugX, bugY) = bugPositions[bug.id] ?: continue
@@ -292,6 +421,22 @@ fun Game() {
                     painter = painterResource(id = bug.imageRes),
                     contentDescription = "Жук",
                     modifier = imageModifier
+                )
+            }
+            if (bonusActive) {
+                val bonusModifier = remember(bonusX, bonusY) {
+                    Modifier
+                        .size(40.dp)
+                        .graphicsLayer(
+                            translationX = bonusX,
+                            translationY = bonusY
+                        )
+                }
+
+                Image(
+                    painter = painterResource(id = R.drawable.bonus_icon),
+                    contentDescription = "Бонус",
+                    modifier = bonusModifier
                 )
             }
         }
