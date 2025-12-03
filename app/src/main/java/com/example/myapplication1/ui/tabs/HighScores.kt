@@ -66,6 +66,8 @@ fun HighScores() {
         ) {
             if (loading) {
                 Text("Загрузка рекордов...")
+            } else if (topScores.isEmpty()) {
+                Text("Рекордов пока нет")
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -94,7 +96,9 @@ fun ScoreItem(score: HighScore, player: Player?) {
             },
             supportingContent = {
                 Column {
-                    Text("Уровень: ${player?.difficult ?: "N/A"}")
+                    player?.difficult?.let { difficulty ->
+                        Text("Уровень: $difficulty")
+                    }
                     Text("Дата: ${formatDate(score.date)}")
                 }
             }

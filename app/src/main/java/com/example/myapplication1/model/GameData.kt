@@ -13,11 +13,6 @@ object GameData {
     var bonusInterval by mutableIntStateOf(30)
     var duration by mutableIntStateOf(60)
 
-    var score by mutableIntStateOf(0)
-    var misses by mutableIntStateOf(0)
-    var timeLeft by mutableFloatStateOf(duration.toFloat())
-    var gameActive by mutableStateOf(false)
-
     var currentPlayerId by mutableLongStateOf(-1L)
     var currentPlayerName by mutableStateOf("")
     var currentPlayerDifficulty by mutableIntStateOf(0)

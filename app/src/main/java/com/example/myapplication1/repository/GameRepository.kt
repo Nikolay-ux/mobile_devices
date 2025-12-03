@@ -24,8 +24,16 @@ class GameRepository private constructor(database: AppDatabase) {
         highScoreDao.getTopScoresPerPlayer()
     }
 
+    suspend fun insertScoreIfHigher(score: HighScore): Boolean = withContext(Dispatchers.IO) {
+        highScoreDao.insertScoreIfHigher(score)
+    }
+
     suspend fun insertScore(score: HighScore) = withContext(Dispatchers.IO) {
-        highScoreDao.insertScore(score)
+        highScoreDao.insertScoreIfHigher(score)
+    }
+
+    suspend fun getTopScoreByPlayer(playerId: Long): HighScore? = withContext(Dispatchers.IO) {
+        highScoreDao.getTopScoreByPlayer(playerId)
     }
 
     companion object {

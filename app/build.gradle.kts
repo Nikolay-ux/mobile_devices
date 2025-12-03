@@ -42,9 +42,32 @@ android {
 
 dependencies {
 
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
+    implementation("com.squareup.retrofit2:converter-simplexml:2.9.0") {
+        exclude(group = "stax", module = "stax-api")
+        exclude(group = "stax", module = "stax")
+        exclude (group = "xpp3", module = "xpp3")
+    }
+
+    implementation("io.insert-koin:koin-android:4.1.1")
+    implementation("io.insert-koin:koin-androidx-compose:4.1.1")
+    implementation("io.insert-koin:koin-core:4.1.1")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.5.1")
+
     implementation("com.google.guava:guava:33.3.1-android") {
         exclude(group = "com.google.guava", module = "listenablefuture")
     }
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -66,6 +89,8 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.compiler)
     implementation(libs.androidx.compose.material.core)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
